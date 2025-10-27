@@ -15,7 +15,7 @@ local function encrypt_sensitive_data(value)
     end
     
     local patterns = {
-        -- Patterns for key-value pairs (like in query strings or form data)
+        -- Direct key-value patterns
         { pattern = 'password%s*=%s*([^%s,.;!?]+)', replace_with_quotes = false },
         { pattern = 'pwd%s*=%s*([^%s,.;!?]+)', replace_with_quotes = false },
         { pattern = 'username%s*=%s*([^%s,.;!?]+)', replace_with_quotes = false },
@@ -23,10 +23,68 @@ local function encrypt_sensitive_data(value)
         { pattern = 'msisdn%s*=%s*([^%s,.;!?]+)', replace_with_quotes = false },
         { pattern = 'phone%s*=%s*([^%s,.;!?]+)', replace_with_quotes = false },
         { pattern = 'email%s*=%s*([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'secret%s*=%s*([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'token%s*=%s*([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'api[%s_-]*key%s*=%s*([^%s,.;!?]+)', replace_with_quotes = false },
         
-        -- Patterns for standalone values (direct field values)
+        -- Natural language patterns with colon
+        { pattern = 'password%s*:%s*([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'pwd%s*:%s*([^%s,.;!?]+)', replace_with_quotes = false },
+		{ pattern = 'msisdn%s*:%s*([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'username%s*:%s*([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'phone%s*:%s*([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'email%s*:%s*([^%s,.;!?]+)', replace_with_quotes = false },
+        
+        -- Natural language patterns with "is"
+        { pattern = 'password%s+is%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'pwd%s+is%s+([^%s,.;!?]+)', replace_with_quotes = false },
+		{ pattern = 'msisdn%s+is%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'username%s+is%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'phone%s+is%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'email%s+is%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        
+        -- Natural language patterns with "could be"
+        { pattern = 'password%s+could%s+be%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'pwd%s+could%s+be%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'username%s+could%s+be%s+([^%s,.;!?]+)', replace_with_quotes = false },
+		{ pattern = 'msisdn%s+could%s+be%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        
+        -- Natural language patterns with "might be"
+        { pattern = 'password%s+might%s+be%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        { pattern = 'pwd%s+might%s+be%s+([^%s,.;!?]+)', replace_with_quotes = false },
+		{ pattern = 'msisdn%s+might%s+be%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        
+        -- Natural language patterns with "should be"
+        { pattern = 'password%s+should%s+be%s+([^%s,.;!?]+)', replace_with_quotes = false },
+		{ pattern = 'msisdn%s+should%s+be%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        
+        -- Natural language patterns with "equals"
+        { pattern = 'password%s+equals%s+([^%s,.;!?]+)', replace_with_quotes = false },
+		{ pattern = 'msisdn%s+equals%s+([^%s,.;!?]+)', replace_with_quotes = false },
+        
+        -- Quoted values patterns
+        { pattern = 'password%s*=%s*["\']([^"\']+)["\']', replace_with_quotes = true },
+        { pattern = 'password%s*:%s*["\']([^"\']+)["\']', replace_with_quotes = true },
+        { pattern = 'password%s+is%s+["\']([^"\']+)["\']', replace_with_quotes = true },
+		{ pattern = 'msisdn%s*=%s*["\']([^"\']+)["\']', replace_with_quotes = true },
+        { pattern = 'msisdn%s*:%s*["\']([^"\']+)["\']', replace_with_quotes = true },
+        { pattern = 'msisdn%s+is%s+["\']([^"\']+)["\']', replace_with_quotes = true },
+        
+        -- Credit card patterns
+        { pattern = 'credit%s*card%s*:%s*([%d%s%-]+%d)', replace_with_quotes = false },
+        { pattern = 'credit%s*card%s+is%s+([%d%s%-]+%d)', replace_with_quotes = false },
+        { pattern = 'card%s*number%s*:%s*([%d%s%-]+%d)', replace_with_quotes = false },
+        
+        -- SSN patterns
+        { pattern = 'ssn%s*:%s*([%d%-]+)', replace_with_quotes = false },
+        { pattern = 'social%s*security%s*:%s*([%d%-]+)', replace_with_quotes = false },
+        { pattern = 'ssn%s+is%s+([%d%-]+)', replace_with_quotes = false },
+        
+        -- Standalone patterns for direct values
         { pattern = '^[%w%.%%%+%-]+@[%w%.%-]+%.[%w]+$', is_standalone = true }, -- email regex
         { pattern = '^%+?[%d%-%s%(%)]+$', min_length = 8, is_standalone = true }, -- phone regex
+        { pattern = '^%d{3}%-%d{2}%-%d{4}$', is_standalone = true }, -- SSN regex
+        { pattern = '^%d{4}[%s%-]%d{4}[%s%-]%d{4}[%s%-]%d{4}$', is_standalone = true }, -- credit card regex
     }
 
     local modified = value
