@@ -9,7 +9,7 @@ services:
       - ./plugins/sensitive-encrypt:/usr/local/share/lua/5.1/kong/plugins/sensitive-encrypt
       - ./kong.yml:/etc/kong/kong.yml:ro
     environment:
-      KONG_DATABASE: off
+      KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /etc/kong/kong.yml
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_ADMIN_ACCESS_LOG: /dev/stdout
